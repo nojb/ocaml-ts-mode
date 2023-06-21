@@ -23,14 +23,8 @@
 (declare-function treesit-node-parent "treesit.c")
 (declare-function treesit-node-start "treesit.c")
 (declare-function treesit-node-end "treesit.c")
-(declare-function treesit-node-child "treesit.c")
 (declare-function treesit-node-child-by-field-name "treesit.c")
 (declare-function treesit-node-type "treesit.c")
-(declare-function treesit-node-prev-sibling "treesit.c")
-(declare-function treesit-node-first-child-for-pos "treesit.c")
-(declare-function treesit-node-next-sibling "treesit.c")
-(declare-function treesit-parser-set-included-ranges "treesit.c")
-(declare-function treesit-query-compile "treesit.c")
 
 ;;; Custom variables
 
@@ -59,157 +53,263 @@
 
 ;;; Font-lock
 
+(defvar ocaml-interface-ts-mode--keywords
+  '("exception" "val" "type" "module" "sig" "of" "with"
+    "include" "end" "method" "class" "open" "mutable")
+  "OCaml interface keywords for tree-sitter font-locking.")
+
 (defvar ocaml-ts-mode--keywords
-  '("let" "mod" "in" "open" "if" "then" "else" "for" "to" "downto"
-    "do" "done" "while" "try" "with" "match" "and" "rec" "module"
-    "class" "object" "struct" "functor" "begin" "end" "type"
-    "of" "nonrec" "fun" "sig" "function" "val" "include" "when" "exception"
-    "method" "private" "virtual")
+  (append ocaml-interface-ts-mode--keywords
+          '("let" "mod" "in" "if" "then" "else" "for" "to" "downto"
+            "do" "done" "while" "try" "match" "and" "rec"
+            "object" "struct" "functor" "begin"
+            "nonrec" "fun" "function" "when"
+            "private" "virtual" "lazy" "inherit" "initializer"
+            "new" "as"))
   "OCaml keywords for tree-sitter font-locking.")
 
-(defvar ocaml-ts-mode--font-lock-settings
-  (treesit-font-lock-rules
-   :language 'ocaml
-   :feature 'keyword
-   `([,@ocaml-ts-mode--keywords] @font-lock-keyword-face)
+;; (defun ocaml-ts-mode--font-lock-settings
+;;   "Tree-sitter font-lock settings for `ocaml-ts-mode'."
+;;   (treesit-font-lock-rules
+;;    :language lang
+;;    :feature 'keyword
+;;    `([,@ocaml-ts-mode--keywords] @font-lock-keyword-face)
 
-   :language 'ocaml
+;;    :language lang
+;;    :feature 'delimiter
+;;    '([";" "." ","] @font-lock-delimiter-face)
+
+;;    :language lang
+;;    :feature 'type
+;;    '((type_constructor) @font-lock-type-face)
+
+;;    :language lang
+;;    :feature 'comment
+;;    '((comment) @font-lock-comment-face)
+
+;;    :language lang
+;;    :feature 'number
+;;    '((number) @font-lock-number-face)
+
+;;    :language lang
+;;    :feature 'string
+;;    '([(string) (character)] @font-lock-string-face)
+
+;;    :language lang
+;;    :feature 'variable
+;;    '((assert_expression "assert" @font-lock-warning-face))
+
+;;    :language lang
+;;    :feature 'function
+;;    '(
+;;      (method_definition
+;;       name: (method_name) @font-lock-function-name-face)
+;;      (value_definition
+;;       (let_binding pattern: (value_name) @font-lock-function-name-face
+;;                    (parameter))))
+
+;;    :language lang
+;;    :feature 'constructor
+;;    '(["true" "false" (tag) (constructor_name)] @font-lock-constant-face)
+
+;;    :language lang
+;;    :feature 'module
+;;    '((module_name) @font-lock-function-name-face)
+
+;;    :language lang
+;;    :feature 'variable
+;;    '(
+;;      ["[%" "[@" "[@@"] @font-lock-preprocessor-face
+;;      (attribute_id) @font-lock-preprocessor-face
+;;      "%" @font-lock-preprocessor-face
+;;      (attribute_payload ":" @font-lock-preprocessor-face)
+;;      (extension "]" @font-lock-preprocessor-face)
+;;      (attribute "]" @font-lock-preprocessor-face)
+;;      (labeled_argument "~" @font-lock-constant-face (label_name) @font-lock-constant-face)
+;;      (value_pattern) @font-lock-variable-name-face
+;;      (tuple_pattern (value_name) @font-lock-variable-name-face)
+;;      (value_definition
+;;       (let_binding pattern: [(value_name) @font-lock-variable-name-face]))
+;;      (instance_variable_name) @font-lock-variable-name-face
+;;      (field_pattern (field_path (field_name) @font-lock-variable-name-face))
+;;      )
+
+;;    :language lang
+;;    :feature 'bracket
+;;    '(["(" ")" "[" "]" "{" "}"] @font-lock-bracket-face)
+;;    ))
+
+(defun ocaml-ts-mode--font-lock-settings (lang)
+  "Tree-sitter font-lock settings for `ocaml-ts-mode'."
+  (treesit-font-lock-rules
+   :language 'ocaml_interface
+   :feature 'keyword
+   `([,@ocaml-interface-ts-mode--keywords] @font-lock-keyword-face)
+
+   :language 'ocaml_interface
    :feature 'delimiter
    '([";" "." ","] @font-lock-delimiter-face)
 
-   :language 'ocaml
-   :feature 'type
-   '((type_constructor) @font-lock-type-face)
-
-   :language 'ocaml
+   :language 'ocaml_interface
    :feature 'comment
-   '([(comment)] @font-lock-comment-face)
+   '((comment) @font-lock-comment-face)
 
-   :language 'ocaml
-   :feature 'bracket
-   '((["(" ")" "[" "]" "{" "}"]) @font-lock-bracket-face)
-
-   :language 'ocaml
-   :feature 'number
-   '([(number)] @font-lock-number-face)
-
-   :language 'ocaml
-   :feature 'string
-   '([(string) (character)] @font-lock-string-face)
-
-   :language 'ocaml
-   :feature 'function
-   '(
-     ;; (application_expression
-     ;;  function: [(value_path [(value_name) @font-lock-function-name-face])])
-     (value_definition
-      (let_binding pattern: [(value_name) @font-lock-function-name-face]
-                   (parameter)
-                   )))
-
-   :language 'ocaml
-   :feature 'constructor
-   '(["true" "false" (tag) (constructor_name)] @font-lock-constant-face)
-
-   :language 'ocaml
+   :language 'ocaml_interface
    :feature 'module
-   '([(module_name)] @font-lock-builtin-face)
+   '((module_name) @font-lock-function-name-face)
 
-   :language 'ocaml
+   :language 'ocaml_interface
    :feature 'variable
    '(
-     (value_definition
-      (let_binding pattern: [(value_name) @font-lock-variable-name-face]
-                   )))
-   ;; '([(value_name) (value_pattern)] @font-lock-variable-name-face))
-   )
-  "Tree-sitter font-lock settings for `ocaml-ts-mode'.")
+     ["[%" "[@" "[@@"] @font-lock-preprocessor-face
+     (attribute_id) @font-lock-preprocessor-face
+     "%" @font-lock-preprocessor-face
+     (attribute_payload ":" @font-lock-preprocessor-face)
+     (extension "]" @font-lock-preprocessor-face)
+     (attribute "]" @font-lock-preprocessor-face)
+     )
+
+   :language 'ocaml_interface
+   :feature 'bracket
+   '(["{" "}"] @font-lock-bracket-face)
+   ))
 
 ;;; Imenu
 
-(defun ocaml-ts-mode--imenu ()
-  "Return Imenu alist for the current buffer."
-  (let* ((node (treesit-buffer-root-node))
-         ;; (enum-tree (treesit-induce-sparse-tree
-         ;;             node "enum_item" nil))
-         ;; (enum-index (rust-ts-mode--imenu-1 enum-tree))
-         ;; (func-tree (treesit-induce-sparse-tree
-         ;;             node "function_item" nil))
-         ;; (func-index (rust-ts-mode--imenu-1 func-tree))
-         ;; (impl-tree (treesit-induce-sparse-tree
-         ;;             node "impl_item" nil))
-         ;; (impl-index (rust-ts-mode--imenu-1 impl-tree))
-         (mod-tree (treesit-induce-sparse-tree
-                    node "module_binding" nil))
-         (mod-index (ocaml-ts-mode--imenu-1 mod-tree)))
-         ;; (struct-tree (treesit-induce-sparse-tree
-         ;;               node "struct_item" nil))
-         ;; (struct-index (rust-ts-mode--imenu-1 struct-tree))
-         ;; (type-tree (treesit-induce-sparse-tree
-         ;;             node "type_item" nil))
-         ;; (type-index (rust-ts-mode--imenu-1 type-tree)))
-    (append
-     (when mod-index `(("Module" . ,mod-index))))))
-     ;; (when enum-index `(("Enum" . ,enum-index)))
-     ;; (when impl-index `(("Impl" . ,impl-index)))
-     ;; (when type-index `(("Type" . ,type-index)))
-     ;; (when struct-index `(("Struct" . ,struct-index)))
-     ;; (when func-index `(("Fn" . ,func-index))))))
+(defun ocaml-ts-mode--defun-name (node)
+  (treesit-node-text
+   (pcase (treesit-node-type node)
+     ("module_binding" (treesit-node-child-by-field-name node "name"))
+     ("let_binding" (treesit-node-child-by-field-name node "pattern"))
+     ("type_binding" (treesit-node-child-by-field-name node "name"))
+     ("class_type_binding" (treesit-node-child-by-field-name node "name"))
+     ("module_type_definition" (treesit-node-child-by-field-name node "name"))
+     ("method_definition" (treesit-node-child-by-field-name node "name")))))
 
-(defun ocaml-ts-mode--imenu-1 (node)
-  "Helper for `ocaml-ts-mode--imenu'.
-Find string representation for NODE and set marker, then recurse
-the subtrees."
-  (let* ((ts-node (car node))
-         (children (cdr node))
-         (subtrees (mapcan #'ocaml-ts-mode--imenu-1
-                           children))
-         (name (when ts-node
-                 (pcase (treesit-node-type ts-node)
-                   ;; ("enum_item"
-                   ;;  (treesit-node-text
-                   ;;   (treesit-node-child-by-field-name ts-node "name") t))
-                   ;; ("function_item"
-                   ;;  (treesit-node-text
-                   ;;   (treesit-node-child-by-field-name ts-node "name") t))
-                   ;; ("impl_item"
-                   ;;  (let ((trait-node (treesit-node-child-by-field-name ts-node "trait")))
-                   ;;    (concat
-                   ;;     (treesit-node-text
-                   ;;      trait-node t)
-                   ;;     (when trait-node
-                   ;;       " for ")
-                   ;;     (treesit-node-text
-                   ;;      (treesit-node-child-by-field-name ts-node "type") t))))
-                   ("module_binding"
-                    (treesit-node-text
-                     (treesit-node-child-by-field-name ts-node "name") t)))))
-                   ;; ("struct_item"
-                   ;;  (treesit-node-text
-                   ;;   (treesit-node-child-by-field-name ts-node "name") t))
-                   ;; ("type_item"
-                   ;;  (treesit-node-text
-                   ;;   (treesit-node-child-by-field-name ts-node "name") t)))))
-         (marker (when ts-node
-                   (set-marker (make-marker)
-                               (treesit-node-start ts-node)))))
-    (cond
-     ((or (null ts-node) (null name)) subtrees)
-     (subtrees
-      `((,name ,(cons name marker) ,@subtrees)))
-     (t
-      `((,name . ,marker))))))
+(defvar ocaml-ts-mode--imenu-settings
+  `(("Module" "module_binding" nil nil)
+    ("Variable" "let_binding" nil nil)
+    ("Type" "type_binding" nil nil)
+    ("Method" "method_definition" nil nil)
+    ("Class Type" "class_type_binding" nil nil)
+    ("Module Type" "module_type_definition")))
 
 ;;; Indent
 
-(defvar ocaml-ts-mode--indent-rules
-  `((ocaml
+(defcustom ocaml-ts-mode-indent-offset 2
+  "Number of spaces for each indentation step in `ocaml-ts-mode'."
+  :version "29.1"
+  :type 'integer
+  :safe 'integerp
+  :group 'ocaml)
 
-     ))
+(defcustom ocaml-ts-mode-indent-offset-with 0
+  "Number of spaces for each indentation step in `ocaml-ts-mode'."
+  :version "29.1"
+  :type 'integer
+  :safe 'integerp
+  :group 'ocaml)
+
+(defun special-parent (n p &rest _)
+  (let ((start (treesit-node-start p)))
+    (when (save-excursion  (goto-char start) (back-to-indentation) (< (point) start))
+      (when (setq x (treesit-simple-indent p (treesit-node-parent p) (line-beginning-position)))
+        (+ (car x) (cdr x))))))
+
+(defvar ocaml-ts-mode--indent-rules
+  (let ((offset ocaml-ts-mode-indent-offset)
+        (offset-with ocaml-ts-mode-indent-offset-with))
+    `((ocaml
+       ((node-is "}") parent-bol 0)
+       ((node-is ")") parent-bol 0)
+       ((node-is "]") parent-bol 0)
+       ((node-is "end") parent-bol 0)
+       ((node-is "with") parent-bol 0)
+       ((node-is "and") parent-bol 0)
+       ((parent-is "type_binding") parent-bol ,offset)
+       ((parent-is "or_pattern") parent-bol 0)
+       ((match "structure" "module_binding" nil nil nil) parent-bol 0)
+       ((match "signature" "module_type_definition" nil nil nil) parent-bol 0)
+       ((parent-is "value_specification") parent-bol ,offset)
+       ((match "function_type" "function_type" nil nil nil) parent-bol 0)
+       ((parent-is "list_expression")  (or special-parent parent-bol) ,offset)
+       ((parent-is "record_declaration") parent-bol ,offset)
+       ((parent-is "let_binding") parent-bol ,offset)
+       ((parent-is "labeled_argument") parent-bol ,offset)
+       ((parent-is "module_binding") parent-bol ,offset)
+       ((parent-is "application_expression") parent-bol ,offset)
+       ((parent-is "module_application") parent-bol ,offset)
+       ((parent-is "signature") parent-bol ,offset)
+       ((parent-is "structure") parent-bol ,offset)
+       ((parent-is "object_expression") parent-bol ,offset)
+       ((parent-is "sequence_expression") parent-bol 0)
+       ((parent-is "function_expression") parent-bol ,offset)
+       ((parent-is "do_clause") parent-bol ,offset)
+       ((match nil "match_expression" nil 1 1) parent-bol ,offset)
+       ((parent-is "match_expression") (or special-parent parent-bol) ,offset-with)
+       ((parent-is "match_case") parent-bol 4)
+       ((parent-is "let_expression") parent-bol 0)
+       ((parent-is "let_module_expression") parent-bol 0)
+       ((parent-is "let_open_expression") parent-bol 0)
+       ((parent-is "then_clause") parent-bol ,offset)
+       ((parent-is "else_clause") parent-bol ,offset)
+       ((parent-is "if_expression") parent-bol 0)
+       ((parent-is "record_expression") parent-bol ,offset)
+       ((parent-is "record_pattern") parent-bol ,offset)
+       ((parent-is "field_pattern") parent-bol ,offset)
+       ((match "|" "variant_declaration" nil nil nil) parent-bol 0)
+       ((node-is "|") parent-bol 0)
+       ((parent-is "parenthesized_expression") parent-bol ,offset)
+       ((parent-is "infix_expression") parent-bol 0)
+       ((match "cons_expression" nil "right") parent-bol 0)
+       ((node-is "infix_operator") parent 0)
+       ((parent-is "product_expression") parent-bol 0)
+       ((parent-is "fun_expression") parent-bol ,offset)
+       ((match nil "try_expression" nil 1 1) parent-bol ,offset)
+       ((parent-is "method_definition") parent-bol ,offset)
+       ((parent-is "class_body_type") parent-bol ,offset))))
   "Tree-sitter indent rules for `ocaml-ts-mode'.")
 
+(defun ocaml-ts-mode--common-setup (lang)
+  (when (treesit-ready-p lang)
+    (treesit-parser-create lang)
+
+    (setq-local treesit-font-lock-settings (ocaml-ts-mode--font-lock-settings lang)
+                treesit-font-lock-feature-list
+                '((keyword string module constructor type comment function delimiter variable) (bracket number)))
+
+    ;; Comments
+    (setq-local comment-start "(*")
+    (setq-local comment-end "*)")
+    (setq-local comment-start-skip "(\\*+ *")
+    (setq-local comment-end-skip " *\\*+)")
+
+    ;; Imenu.
+    (setq-local treesit-simple-imenu-settings ocaml-ts-mode--imenu-settings)
+
+    (setq-local indent-tabs-mode nil
+                treesit-simple-indent-rules ocaml-ts-mode--indent-rules)
+
+    (setq-local treesit-defun-name-function #'ocaml-ts-mode--defun-name)
+
+    (setq-local treesit-defun-type-regexp "class_type_binding\\|let_binding\\|module_binding\\|type_binding\\|value_definition\\|type_definition\\|method_definition\\|module_type_definition")
+
+    (treesit-major-mode-setup)
+    (message "%s" (treesit-parser-list))))
+
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.mli?\\'" . ocaml-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.mli\\'" . ocaml-interface-ts-mode))
+
+;;;###autoload
+(define-derived-mode ocaml-interface-ts-mode prog-mode "OCaml/i"
+  "Major mode for editing OCaml interfaces, powered by tree-sitter."
+  :group 'ocaml
+  :syntax-table ocaml-ts-mode--syntax-table
+
+  (ocaml-ts-mode--common-setup 'ocaml_interface))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.ml\\'" . ocaml-ts-mode))
 
 ;;;###autoload
 (define-derived-mode ocaml-ts-mode prog-mode "OCaml"
@@ -217,20 +317,7 @@ the subtrees."
   :group 'ocaml
   :syntax-table ocaml-ts-mode--syntax-table
 
-  (when (treesit-ready-p 'ocaml)
-    (treesit-parser-create 'ocaml)
-
-    (setq-local treesit-font-lock-settings ocaml-ts-mode--font-lock-settings
-                treesit-font-lock-feature-list
-                '((keyword string module constructor type comment function delimiter variable) (bracket number)))
-
-    ;; Imenu.
-    (setq-local imenu-create-index-function #'ocaml-ts-mode--imenu)
-
-    (setq-local indent-tabs-mode nil
-                treesit-simple-indent-rules ocaml-ts-mode--indent-rules)
-
-    (treesit-major-mode-setup)))
+  (ocaml-ts-mode--common-setup 'ocaml))
 
 (provide 'ocaml-ts-mode)
 
