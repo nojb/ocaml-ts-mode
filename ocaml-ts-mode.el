@@ -53,106 +53,96 @@
 
 ;;; Font-lock
 
-(defvar ocaml-interface-ts-mode--keywords
-  '("exception" "val" "type" "module" "sig" "of" "with"
-    "include" "end" "method" "class" "open" "mutable")
-  "OCaml interface keywords for tree-sitter font-locking.")
+(defvar ocaml-intf-ts-mode--keywords
+  '("exception"
+    "val"
+    "type"
+    "module"
+    "sig"
+    "of"
+    "with"
+    "include"
+    "end"
+    "method"
+    "class"
+    "open"
+    "mutable"
+    "nonrec"
+    "struct"))
 
-(defvar ocaml-ts-mode--keywords
-  (append ocaml-interface-ts-mode--keywords
-          '("let" "mod" "in" "if" "then" "else" "for" "to" "downto"
-            "do" "done" "while" "try" "match" "and" "rec"
-            "object" "struct" "functor" "begin"
-            "nonrec" "fun" "function" "when"
-            "private" "virtual" "lazy" "inherit" "initializer"
-            "new" "as"))
-  "OCaml keywords for tree-sitter font-locking.")
+(defvar ocaml-impl-ts-mode--keywords
+  (append ocaml-intf-ts-mode--keywords
+          '("let"
+            "in"
+            "if"
+            "then"
+            "else"
+            "for"
+            "to"
+            "downto"
+            "do"
+            "done"
+            "while"
+            "try"
+            "match"
+            "and"
+            "rec"
+            "object"
+            "functor"
+            "begin"
+            "fun"
+            "function"
+            "when"
+            "private"
+            "virtual"
+            "lazy"
+            "inherit"
+            "initializer"
+            "new"
+            "as")))
 
-;; (defun ocaml-ts-mode--font-lock-settings
-;;   "Tree-sitter font-lock settings for `ocaml-ts-mode'."
-;;   (treesit-font-lock-rules
-;;    :language lang
-;;    :feature 'keyword
-;;    `([,@ocaml-ts-mode--keywords] @font-lock-keyword-face)
-
-;;    :language lang
-;;    :feature 'delimiter
-;;    '([";" "." ","] @font-lock-delimiter-face)
-
-;;    :language lang
-;;    :feature 'type
-;;    '((type_constructor) @font-lock-type-face)
-
-;;    :language lang
-;;    :feature 'comment
-;;    '((comment) @font-lock-comment-face)
-
-;;    :language lang
-;;    :feature 'number
-;;    '((number) @font-lock-number-face)
-
-;;    :language lang
-;;    :feature 'string
-;;    '([(string) (character)] @font-lock-string-face)
-
-;;    :language lang
-;;    :feature 'variable
-;;    '((assert_expression "assert" @font-lock-warning-face))
-
-;;    :language lang
-;;    :feature 'function
-;;    '(
-;;      (method_definition
-;;       name: (method_name) @font-lock-function-name-face)
-;;      (value_definition
-;;       (let_binding pattern: (value_name) @font-lock-function-name-face
-;;                    (parameter))))
-
-;;    :language lang
-;;    :feature 'constructor
-;;    '(["true" "false" (tag) (constructor_name)] @font-lock-constant-face)
-
-;;    :language lang
-;;    :feature 'module
-;;    '((module_name) @font-lock-function-name-face)
-
-;;    :language lang
-;;    :feature 'variable
-;;    '(
-;;      ["[%" "[@" "[@@"] @font-lock-preprocessor-face
-;;      (attribute_id) @font-lock-preprocessor-face
-;;      "%" @font-lock-preprocessor-face
-;;      (attribute_payload ":" @font-lock-preprocessor-face)
-;;      (extension "]" @font-lock-preprocessor-face)
-;;      (attribute "]" @font-lock-preprocessor-face)
-;;      (labeled_argument "~" @font-lock-constant-face (label_name) @font-lock-constant-face)
-;;      (value_pattern) @font-lock-variable-name-face
-;;      (tuple_pattern (value_name) @font-lock-variable-name-face)
-;;      (value_definition
-;;       (let_binding pattern: [(value_name) @font-lock-variable-name-face]))
-;;      (instance_variable_name) @font-lock-variable-name-face
-;;      (field_pattern (field_path (field_name) @font-lock-variable-name-face))
-;;      )
-
-;;    :language lang
-;;    :feature 'bracket
-;;    '(["(" ")" "[" "]" "{" "}"] @font-lock-bracket-face)
-;;    ))
-
-(defun ocaml-ts-mode--font-lock-settings (lang)
-  "Tree-sitter font-lock settings for `ocaml-ts-mode'."
+(defvar ocaml-intf-ts-mode--font-lock-settings
   (treesit-font-lock-rules
    :language 'ocaml_interface
    :feature 'keyword
-   `([,@ocaml-interface-ts-mode--keywords] @font-lock-keyword-face)
+   `([,@ocaml-intf-ts-mode--keywords] @font-lock-keyword-face)
 
    :language 'ocaml_interface
    :feature 'delimiter
    '([";" "." ","] @font-lock-delimiter-face)
 
    :language 'ocaml_interface
+   :feature 'type
+   '((type_constructor) @font-lock-type-face)
+
+   :language 'ocaml_interface
    :feature 'comment
    '((comment) @font-lock-comment-face)
+
+   :language 'ocaml_interface
+   :feature 'number
+   '((number) @font-lock-number-face)
+
+   :language 'ocaml_interface
+   :feature 'string
+   '([(string) (character)] @font-lock-string-face)
+
+   :language 'ocaml_interface
+   :feature 'variable
+   '((assert_expression "assert" @font-lock-warning-face))
+
+   :language 'ocaml_interface
+   :feature 'function
+   '(
+     (method_definition
+      name: (method_name) @font-lock-function-name-face)
+     (value_definition
+      (let_binding pattern: (value_name) @font-lock-function-name-face
+                   (parameter))))
+
+   :language 'ocaml_interface
+   :feature 'constructor
+   '(["true" "false" (tag) (constructor_name)] @font-lock-constant-face)
 
    :language 'ocaml_interface
    :feature 'module
@@ -167,12 +157,87 @@
      (attribute_payload ":" @font-lock-preprocessor-face)
      (extension "]" @font-lock-preprocessor-face)
      (attribute "]" @font-lock-preprocessor-face)
+     (labeled_argument "~" @font-lock-constant-face (label_name) @font-lock-constant-face)
+     (value_pattern) @font-lock-variable-name-face
+     (tuple_pattern (value_name) @font-lock-variable-name-face)
+     (value_definition
+      (let_binding pattern: [(value_name) @font-lock-variable-name-face]))
+     (instance_variable_name) @font-lock-variable-name-face
+     (field_pattern (field_path (field_name) @font-lock-variable-name-face))
      )
 
    :language 'ocaml_interface
    :feature 'bracket
-   '(["{" "}"] @font-lock-bracket-face)
-   ))
+   '(["(" ")" "[" "]" "{" "}"] @font-lock-bracket-face)))
+
+(defvar ocaml-impl-ts-mode--font-lock-settings
+  (treesit-font-lock-rules
+   :language 'ocaml
+   :feature 'keyword
+   `([,@ocaml-impl-ts-mode--keywords] @font-lock-keyword-face)
+
+   :language 'ocaml
+   :feature 'delimiter
+   '([";" "." ","] @font-lock-delimiter-face)
+
+   :language 'ocaml
+   :feature 'type
+   '((type_constructor) @font-lock-type-face)
+
+   :language 'ocaml
+   :feature 'comment
+   '((comment) @font-lock-comment-face)
+
+   :language 'ocaml
+   :feature 'number
+   '((number) @font-lock-number-face)
+
+   :language 'ocaml
+   :feature 'string
+   '([(string) (character)] @font-lock-string-face)
+
+   :language 'ocaml
+   :feature 'variable
+   '((assert_expression "assert" @font-lock-warning-face))
+
+   :language 'ocaml
+   :feature 'function
+   '(
+     (method_definition
+      name: (method_name) @font-lock-function-name-face)
+     (value_definition
+      (let_binding pattern: (value_name) @font-lock-function-name-face
+                   (parameter))))
+
+   :language 'ocaml
+   :feature 'constructor
+   '(["true" "false" (tag) (constructor_name)] @font-lock-constant-face)
+
+   :language 'ocaml
+   :feature 'module
+   '((module_name) @font-lock-function-name-face)
+
+   :language 'ocaml
+   :feature 'variable
+   '(
+     ["[%" "[@" "[@@"] @font-lock-preprocessor-face
+     (attribute_id) @font-lock-preprocessor-face
+     "%" @font-lock-preprocessor-face
+     (attribute_payload ":" @font-lock-preprocessor-face)
+     (extension "]" @font-lock-preprocessor-face)
+     (attribute "]" @font-lock-preprocessor-face)
+     (labeled_argument "~" @font-lock-constant-face (label_name) @font-lock-constant-face)
+     (value_pattern) @font-lock-variable-name-face
+     (tuple_pattern (value_name) @font-lock-variable-name-face)
+     (value_definition
+      (let_binding pattern: [(value_name) @font-lock-variable-name-face]))
+     (instance_variable_name) @font-lock-variable-name-face
+     (field_pattern (field_path (field_name) @font-lock-variable-name-face))
+     )
+
+   :language 'ocaml
+   :feature 'bracket
+   '(["(" ")" "[" "]" "{" "}"] @font-lock-bracket-face)))
 
 ;;; Imenu
 
@@ -270,11 +335,19 @@
        ((parent-is "class_body_type") parent-bol ,offset))))
   "Tree-sitter indent rules for `ocaml-ts-mode'.")
 
-(defun ocaml-ts-mode--common-setup (lang)
-  (when (treesit-ready-p lang)
-    (treesit-parser-create lang)
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.mli\\'" . ocaml-intf-ts-mode))
 
-    (setq-local treesit-font-lock-settings (ocaml-ts-mode--font-lock-settings lang)
+;;;###autoload
+(define-derived-mode ocaml-intf-ts-mode prog-mode "OCaml/i"
+  "Major mode for editing OCaml interfaces, powered by tree-sitter."
+  :group 'ocaml
+  :syntax-table ocaml-ts-mode--syntax-table
+
+  (when (treesit-ready-p 'ocaml_interface)
+    (treesit-parser-create 'ocaml_interface)
+
+    (setq-local treesit-font-lock-settings ocaml-intf-ts-mode--font-lock-settings
                 treesit-font-lock-feature-list
                 '((keyword string module constructor type comment function delimiter variable) (bracket number)))
 
@@ -294,30 +367,41 @@
 
     (setq-local treesit-defun-type-regexp "class_type_binding\\|let_binding\\|module_binding\\|type_binding\\|value_definition\\|type_definition\\|method_definition\\|module_type_definition")
 
-    (treesit-major-mode-setup)
-    (message "%s" (treesit-parser-list))))
+    (treesit-major-mode-setup)))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.mli\\'" . ocaml-interface-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.ml\\'" . ocaml-impl-ts-mode))
 
 ;;;###autoload
-(define-derived-mode ocaml-interface-ts-mode prog-mode "OCaml/i"
-  "Major mode for editing OCaml interfaces, powered by tree-sitter."
-  :group 'ocaml
-  :syntax-table ocaml-ts-mode--syntax-table
-
-  (ocaml-ts-mode--common-setup 'ocaml_interface))
-
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.ml\\'" . ocaml-ts-mode))
-
-;;;###autoload
-(define-derived-mode ocaml-ts-mode prog-mode "OCaml"
+(define-derived-mode ocaml-impl-ts-mode prog-mode "OCaml"
   "Major mode for editing OCaml, powered by tree-sitter."
   :group 'ocaml
   :syntax-table ocaml-ts-mode--syntax-table
 
-  (ocaml-ts-mode--common-setup 'ocaml))
+  (when (treesit-ready-p 'ocaml)
+    (treesit-parser-create 'ocaml)
+
+    (setq-local treesit-font-lock-settings ocaml-impl-ts-mode--font-lock-settings
+                treesit-font-lock-feature-list
+                '((keyword string module constructor type comment function delimiter variable) (bracket number)))
+
+    ;; Comments
+    (setq-local comment-start "(*")
+    (setq-local comment-end "*)")
+    (setq-local comment-start-skip "(\\*+ *")
+    (setq-local comment-end-skip " *\\*+)")
+
+    ;; Imenu.
+    (setq-local treesit-simple-imenu-settings ocaml-ts-mode--imenu-settings)
+
+    (setq-local indent-tabs-mode nil
+                treesit-simple-indent-rules ocaml-ts-mode--indent-rules)
+
+    (setq-local treesit-defun-name-function #'ocaml-ts-mode--defun-name)
+
+    (setq-local treesit-defun-type-regexp "class_type_binding\\|let_binding\\|module_binding\\|type_binding\\|value_definition\\|type_definition\\|method_definition\\|module_type_definition")
+
+    (treesit-major-mode-setup)))
 
 (provide 'ocaml-ts-mode)
 
